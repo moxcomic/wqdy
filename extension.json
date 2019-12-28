@@ -1,0 +1,11 @@
+{
+  "id": "wqdy",
+  "version": "1.2.1",
+  "name": "我全都要.min",
+  "author": "Majsoul Plus Team",
+  "description": "本地解锁全人物，道具等。\n基本解决插件冲突问题,不与服务器冲突时可以送礼物结契约",
+  "preview": "preview.jpg",
+  "entry": "script.js",
+  "dependencies": {},
+  "resourcepack": []
+}
