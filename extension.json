@@ -1,11 +1,18 @@
 {
   "id": "wqdy",
-  "version": "1.2.1",
+  "version": "1.1.14",
   "name": "我全都要.min",
   "author": "Majsoul Plus Team",
-  "description": "本地解锁全人物，道具等。\n基本解决插件冲突问题,不与服务器冲突时可以送礼物结契约",
+  "description": "本地解锁全人物，道具等。\n基本解决插件冲突问题,不与服务器冲突时可以送礼物结契约,防止读取角色时角色不存在报错",
   "preview": "preview.jpg",
   "entry": "script.js",
   "dependencies": {},
-  "resourcepack": []
+  "resourcepack": [],
+  "shortcut": {
+    "name": "我全都要",
+    "actions": [{
+      "name": "手动保存当前配置",
+      "execute": "window.wqdy.writeSetting()"
+    }]
+  }
 }
