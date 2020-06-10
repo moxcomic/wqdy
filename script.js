@@ -18,8 +18,15 @@ if (game) {
         readSetting() {
             args.setcharacter = Number(localStorage.getItem("char_id"));
             args.setskin = Number(localStorage.getItem("avatar_id"));
-            args.title = Number(localStorage.getItem("title"))
-                args.views = JSON.parse(localStorage.getItem("views"));
+            args.title = Number(localStorage.getItem("title"));
+			if (localStorage.getItem("views") && localStorage.getItem("views") != "[]"){
+				try{
+					args.views = JSON.parse(localStorage.getItem("views"));
+				}
+				catch (e){
+					console.log("Failed to load Views,Error Message: " + e);
+				}
+			}
             args.view_index = Number(localStorage.getItem("view_index"));
         }
         writeSetting() {
@@ -28,8 +35,8 @@ if (game) {
             localStorage.setItem("char_id", char_id);
             localStorage.setItem("avatar_id", GameMgr.Inst.account_data.avatar_id);
             localStorage.setItem("title", GameMgr.Inst.account_data.title);
-            localStorage.setItem("views", JSON.stringify(uiscript.UI_Sushe.commonViewList))
-            localStorage.setItem("view_index", uiscript.UI_Sushe.using_commonview_index)
+            localStorage.setItem("views", JSON.stringify(uiscript.UI_Sushe.commonViewList));
+            localStorage.setItem("view_index", uiscript.UI_Sushe.using_commonview_index);
             console.log("wqdy角色配置保存成功")
         }
         _init() {
@@ -38,21 +45,27 @@ if (game) {
             game.MJNetMgr.prototype._AuthSuccess = function (e, i, n) {
                 e.forEach(v => {
                     if (v.account_id === GameMgr.Inst.account_id) {
+						console.log(v);
                         v.title = GameMgr.Inst.account_data.title;
                         v.character.charid = uiscript.UI_Sushe.main_character_id;
                         v.character.skin = GameMgr.Inst.account_data.avatar_id;
                         v.character.level = 5;
                         v.character.is_upgraded = true;
-                        v.views = uiscript.UI_Sushe.commonViewList[uiscript.UI_Sushe.using_commonview_index];
+						if (uiscript.UI_Sushe.commonViewList[uiscript.UI_Sushe.using_commonview_index]){
+							v.views = uiscript.UI_Sushe.commonViewList[uiscript.UI_Sushe.using_commonview_index];
+							uiscript.UI_Sushe.commonViewList[uiscript.UI_Sushe.using_commonview_index].forEach(w => {
+								if (w.slot < 5) {
+									v.character.views.push({
+										slot: w.slot + 1,
+										item_id: w.item_id
+									})
+								}
+							})
+						}
+						else{
+							v.views = [];
+						}
                         v.character.views = [];
-                        uiscript.UI_Sushe.commonViewList[uiscript.UI_Sushe.using_commonview_index].forEach(w => {
-                            if (w.slot < 5) {
-                                v.character.views.push({
-                                    slot: w.slot + 1,
-                                    item_id: w.item_id
-                                })
-                            }
-                        })
                         v.avatar_id = GameMgr.Inst.account_data.avatar_id;
                     }
                 })
