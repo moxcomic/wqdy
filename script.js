@@ -22,6 +22,10 @@ if (game) {
 			if (localStorage.getItem("views") && localStorage.getItem("views") != "[]"){
 				try{
 					args.views = JSON.parse(localStorage.getItem("views"));
+					if (args.views[0].slot != undefined){
+						args.views[0] = args.views.concat();
+						args.views = args.views.slice(0,1);
+					}
 				}
 				catch (e){
 					console.log("Failed to load Views,Error Message: " + e);
@@ -45,27 +49,28 @@ if (game) {
             game.MJNetMgr.prototype._AuthSuccess = function (e, i, n) {
                 e.forEach(v => {
                     if (v.account_id === GameMgr.Inst.account_id) {
-						console.log(v);
                         v.title = GameMgr.Inst.account_data.title;
                         v.character.charid = uiscript.UI_Sushe.main_character_id;
                         v.character.skin = GameMgr.Inst.account_data.avatar_id;
                         v.character.level = 5;
                         v.character.is_upgraded = true;
-						if (uiscript.UI_Sushe.commonViewList[uiscript.UI_Sushe.using_commonview_index]){
-							v.views = uiscript.UI_Sushe.commonViewList[uiscript.UI_Sushe.using_commonview_index];
-							uiscript.UI_Sushe.commonViewList[uiscript.UI_Sushe.using_commonview_index].forEach(w => {
+						v.character.views = [];
+						v.views = [];
+						console.log(v);
+						let CurrentViewList = uiscript.UI_Sushe.commonViewList[0].slot != undefined ? uiscript.UI_Sushe.commonViewList : uiscript.UI_Sushe.commonViewList[uiscript.UI_Sushe.using_commonview_index];
+						console.log(CurrentViewList);
+						if (CurrentViewList){
+							v.views = CurrentViewList;
+							CurrentViewList.forEach(w => {
 								if (w.slot < 5) {
 									v.character.views.push({
 										slot: w.slot + 1,
 										item_id: w.item_id
-									})
+									});
 								}
+								else return;
 							})
 						}
-						else{
-							v.views = [];
-						}
-                        v.character.views = [];
                         v.avatar_id = GameMgr.Inst.account_data.avatar_id;
                     }
                 })
@@ -95,7 +100,7 @@ if (game) {
             uiscript.UI_TitleBook.Init = function () {
                 var e = this;
                 var n = cfg.item_definition.title.map_;
-                for (var a = cfg.item_definition.title.minKey_; a < cfg.item_definition.title.maxKey_; a++) {
+                for (var a = cfg.item_definition.title.minKey_; a <= cfg.item_definition.title.maxKey_; a++) {
                     e.owned_title.push(a)
                 }
             }
