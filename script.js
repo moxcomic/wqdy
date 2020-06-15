@@ -57,7 +57,7 @@ if (game) {
 						v.character.views = [];
 						v.views = [];
 						console.log(v);
-						let CurrentViewList = uiscript.UI_Sushe.commonViewList[0].slot != undefined ? uiscript.UI_Sushe.commonViewList : uiscript.UI_Sushe.commonViewList[uiscript.UI_Sushe.using_commonview_index];
+						let CurrentViewList = uiscript.UI_Sushe.commonViewList[0] && uiscript.UI_Sushe.commonViewList[0].slot != undefined ? uiscript.UI_Sushe.commonViewList : uiscript.UI_Sushe.commonViewList[uiscript.UI_Sushe.using_commonview_index];
 						console.log(CurrentViewList);
 						if (CurrentViewList){
 							v.views = CurrentViewList;
