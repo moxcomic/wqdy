@@ -135,7 +135,7 @@ if (game) {
                         views: [],
                         skin: v.init_skin,
                         is_upgraded: true,
-                        extra_emoji: cfg.character.emoji.groups_[v.id].map(v => v.sub_id)
+                        extra_emoji: cfg.character.emoji.groups_[v.id] ? cfg.character.emoji.groups_[v.id].map(v => v.sub_id) : []
                     }
                 });
                 i.main_character_id = cfg.item_definition.character.map_[args.setcharacter] ? args.setcharacter : 200001;
