@@ -233,8 +233,8 @@ if (game) {
             //皮肤全开
             uiscript.UI_Sushe.skin_owned = t => 1;
             //友人房(更改皮肤)
-            const updateData = uiscript.UI_WaitingRoom.prototype.updateData
-                uiscript.UI_WaitingRoom.prototype.updateData = function (t) {
+            const updateData = uiscript.UI_WaitingRoom.prototype.updateData;
+            uiscript.UI_WaitingRoom.prototype.updateData = function (t) {
                 t.persons.forEach(v => {
                     if (v["account_id"] === GameMgr.Inst.account_id) {
                         v["avatar_id"] = GameMgr.Inst.account_data.avatar_id
@@ -243,6 +243,14 @@ if (game) {
                 })
                 return updateData.call(this, t)
             }
+			const _refreshPlayerInfo = uiscript.UI_WaitingRoom.prototype._refreshPlayerInfo;
+			uiscript.UI_WaitingRoom.prototype._refreshPlayerInfo =  function (t) {
+				if (t.account_id == GameMgr.Inst.account_id){
+					t.avatar_id = GameMgr.Inst.account_data.avatar_id;
+					t.title = GameMgr.Inst.account_data.title;
+				}
+				return _refreshPlayerInfo.call(this, t)
+			}
             //解决更换装扮问题（覆盖）
             const Container_Zhuangban = function () {};
             for (let i in uiscript.zhuangban.Container_Zhuangban.prototype) {
@@ -321,10 +329,9 @@ if (game) {
 					r.onChangeGameView()
                 })
             }
-            uiscript.zhuangban.Container_Zhuangban.prototype = Container_Zhuangban.prototype;
-
-            //不管怎样,在本地显示发送的表情;如果表情通过网络验证时,表情会被显示两次(仅在网络连接极差时)
-            const sendReq2MJ = app.NetAgent.sendReq2MJ
+            uiscript.zhuangban.Container_Zhuangban.prototype = Container_Zhuangban.prototype;	
+			//不管怎样,在本地显示发送的表情;如果表情通过网络验证时,表情会被显示两次(仅在网络连接极差时)			
+            const sendReq2MJ = app.NetAgent.sendReq2MJ;
                 app.NetAgent.sendReq2MJ = function (a, b, c, d) {
                 if (a === "FastTest" && b === "broadcastInGame") {
                     let i = JSON.parse(c.content);
@@ -334,6 +341,26 @@ if (game) {
                 }
                 return sendReq2MJ.call(this, a, b, c, d);
             }
+			//解决详细资料显示问题
+			const sendReq2Lobby = app.NetAgent.sendReq2Lobby;
+				app.NetAgent.sendReq2Lobby = function(a, b, c, d) {
+					if (a === "Lobby" && b === "fetchAccountInfo") {
+						var d_back = d;
+						d = function (i, n) {
+							if (i || n.error)
+								uiscript.UIMgr.Inst.showNetReqError("fetchAccountInfo", i, n);
+							else {
+								var a = n.account;
+								if (a.account_id == GameMgr.Inst.account_id){
+									a.avatar_id = GameMgr.Inst.account_data.avatar_id;
+									a.title = GameMgr.Inst.account_data.title;
+								}
+							}
+							return d_back.call(this,i,n);
+						}
+					}
+					return sendReq2Lobby.call(this, a, b, c, d);
+				}
         }
     }
 
