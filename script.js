@@ -148,7 +148,9 @@ if (game) {
 				}
 				cfg.voice.sound.rows_.forEach(deleteLimit,"voice"),
 				cfg.spot.spot.rows_.forEach(deleteLimit,"spot"),
-				i.finished_endings_map = args.finished_endings,
+				if (args.finished_endings != undefined){
+					i.finished_endings_map = args.finished_endings;
+				}
                 i.characters = cfg.item_definition.character.rows_.map(v => {
                     return {
                         charid: v.id,
@@ -175,8 +177,10 @@ if (game) {
 						args.originalCharacterInfo = a;
                         i.send_gift_count = a.send_gift_count;
                         i.send_gift_limit = a.send_gift_limit;
-						for (r = 0; r < a.finished_endings.length; r++){
-                            i.finished_endings_map[a.finished_endings[r]] = 1;
+						if (a.finished_endings){
+							for (r = 0; r < a.finished_endings.length; r++){
+								i.finished_endings_map[a.finished_endings[r]] = 1;
+							}
 						}
 						if (a.rewarded_endings)
 							for (var r = 0; r < a.rewarded_endings.length; r++)
