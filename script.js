@@ -147,7 +147,7 @@ if (game) {
 					item.is_married = 0;
 				}
 				cfg.voice.sound.rows_.forEach(deleteLimit,"voice"),
-				cfg.spot.spot.rows_.forEach(deleteLimit,"spot"),
+				cfg.spot.spot.rows_.forEach(deleteLimit,"spot");
 				if (args.finished_endings != undefined){
 					i.finished_endings_map = args.finished_endings;
 				}
