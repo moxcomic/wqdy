@@ -1,6 +1,7 @@
+let isUseOriginEmoji = undefined; //当此项为true时，对局内的表情将会是原角色的表情，而非wqdy更换过后的。默认关闭。
+let isSexSort = undefined; //当此项为true时，宿舍内的角色将会以性别排序而非纯数组排序。默认关闭。
 if (game) {
     const args = {};
-    const view = game.EPlayerView;
     class WQDY {
         constructor() {
             this.readSetting();
@@ -13,34 +14,52 @@ if (game) {
                 title: GameMgr.Inst.account_data.title,
                 views: uiscript.UI_Sushe.commonViewList,
                 view_index: uiscript.UI_Sushe.using_commonview_index,
-				finished_endings : uiscript.UI_Sushe.finished_endings_map
+                finished_endings: uiscript.UI_Sushe.finished_endings_map,
+                star_chars: uiscript.UI_Sushe.star_chars,
+                characters: uiscript.UI_Sushe.characters,
+                isUseOriginEmoji: args.isUseOriginEmoji,
+                isSexSort: args.isSexSort
             };
         }
         readSetting() {
             args.setcharacter = Number(localStorage.getItem("char_id"));
             args.setskin = Number(localStorage.getItem("avatar_id"));
             args.title = Number(localStorage.getItem("title"));
-			if (localStorage.getItem("views") && localStorage.getItem("views") != "[]"){
-				try{
-					args.views = JSON.parse(localStorage.getItem("views"));
-					if (args.views[0].slot != undefined){
-						args.views[0] = args.views.concat();
-						args.views = args.views.slice(0,1);
-					}
-				}
-				catch (e){
-					console.log("Failed to load Views,Error Message: " + e);
-				}
-			};
+            if (localStorage.getItem("views") && localStorage.getItem("views") != "[]") {
+                try {
+                    args.views = JSON.parse(localStorage.getItem("views"));
+                    if (args.views[0].slot != undefined) {
+                        args.views[0] = args.views.concat();
+                        args.views = args.views.slice(0, 1);
+                    }
+                } catch (e) {
+                    console.log("Failed to load Views,Error Message: " + e);
+                }
+            };
             args.view_index = Number(localStorage.getItem("view_index"));
-			if (localStorage.getItem("finished_endings") && localStorage.getItem("finished_endings") != "[]" && localStorage.getItem("finished_endings") != "{}"){
-				try{
-					args.finished_endings = JSON.parse(localStorage.getItem("finished_endings"));
-				}
-				catch (e){
-					console.log("Failed to load Finished Endings,Error Message: " + e);
-				}
-			};
+            if (localStorage.getItem("finished_endings") && localStorage.getItem("finished_endings") != "[]" && localStorage.getItem("finished_endings") != "{}") {
+                try {
+                    args.finished_endings = JSON.parse(localStorage.getItem("finished_endings"));
+                } catch (e) {
+                    console.log("Failed to load Finished Endings,Error Message: " + e);
+                }
+            };
+            if (localStorage.getItem("star_chars") && localStorage.getItem("star_chars") != "[]" && localStorage.getItem("star_chars") != "{}") {
+                try {
+                    args.star_chars = JSON.parse(localStorage.getItem("star_chars"));
+                } catch (e) {
+                    console.log("Failed to load Star Chars,Error Message: " + e);
+                }
+            };
+			if (localStorage.getItem("characters") && localStorage.getItem("characters") != "[]" && localStorage.getItem("characters") != "{}") {
+                try {
+                    args.characters = JSON.parse(localStorage.getItem("characters"));
+                } catch (e) {
+                    console.log("Failed to load Characters,Error Message: " + e);
+                }
+            };
+            args.isUseOriginEmoji = isUseOriginEmoji ? isUseOriginEmoji : JSON.parse(localStorage.getItem("isUseOriginEmoji"));
+            args.isSexSort = isSexSort ? isSexSort : JSON.parse(localStorage.getItem("isSexSort"));
         }
         writeSetting() {
             let char_id = cfg.item_definition.skin.map_[GameMgr.Inst.account_data.avatar_id].character_id;
@@ -50,7 +69,11 @@ if (game) {
             localStorage.setItem("title", GameMgr.Inst.account_data.title);
             localStorage.setItem("views", JSON.stringify(uiscript.UI_Sushe.commonViewList));
             localStorage.setItem("view_index", uiscript.UI_Sushe.using_commonview_index);
-			localStorage.setItem("finished_endings", JSON.stringify(uiscript.UI_Sushe.finished_endings_map));
+            localStorage.setItem("finished_endings", JSON.stringify(uiscript.UI_Sushe.finished_endings_map));
+            localStorage.setItem("star_chars", JSON.stringify(uiscript.UI_Sushe.star_chars));
+			localStorage.setItem("characters", JSON.stringify(uiscript.UI_Sushe.characters));
+            localStorage.setItem("isUseOriginEmoji", args.isUseOriginEmoji);
+            localStorage.setItem("isSexSort", args.isSexSort);
             console.log("wqdy角色配置保存成功")
         }
         _init() {
@@ -64,24 +87,24 @@ if (game) {
                         v.character.skin = GameMgr.Inst.account_data.avatar_id;
                         v.character.level = 5;
                         v.character.is_upgraded = true;
-						v.character.views = [];
-						v.views = [];
-						v.avatar_frame = game.GameUtility.get_view_id(game.EView.head_frame);
-						console.log(v);
-						let CurrentViewList = uiscript.UI_Sushe.commonViewList[0] && uiscript.UI_Sushe.commonViewList[0].slot != undefined ? uiscript.UI_Sushe.commonViewList : uiscript.UI_Sushe.commonViewList[uiscript.UI_Sushe.using_commonview_index];
-						console.log(CurrentViewList);
-						if (CurrentViewList){
-							v.views = CurrentViewList;
-							CurrentViewList.forEach(w => {
-								if (w.slot < 5) {
-									v.character.views.push({
-										slot: w.slot + 1,
-										item_id: w.item_id
-									});
-								}
-								else return;
-							})
-						}
+                        v.character.views = [];
+                        v.views = [];
+                        v.avatar_frame = game.GameUtility.get_view_id(game.EView.head_frame);
+                        console.log(v);
+                        let CurrentViewList = uiscript.UI_Sushe.commonViewList[0] && uiscript.UI_Sushe.commonViewList[0].slot != undefined ? uiscript.UI_Sushe.commonViewList : uiscript.UI_Sushe.commonViewList[uiscript.UI_Sushe.using_commonview_index];
+                        console.log(CurrentViewList);
+                        if (CurrentViewList) {
+                            v.views = CurrentViewList;
+                            CurrentViewList.forEach(w => {
+                                if (w.slot < 5) {
+                                    v.character.views.push({
+                                        slot: w.slot + 1,
+                                        item_id: w.item_id
+                                    });
+                                } else
+                                    return;
+                            })
+                        }
                         v.avatar_id = GameMgr.Inst.account_data.avatar_id;
                     }
                 })
@@ -92,18 +115,24 @@ if (game) {
                 this._item_map = {};
                 var items = cfg.item_definition.item.map_;
                 for (var id in items) {
-                    this._item_map[id] = {
-                        item_id: id,
-                        count: 99,
-                        category: items[id].category
-                    }
+                    if (items[id].category != 1 && items[id].category != 2 || items[id].category == 6 && items[id].is_unique == 1) //过滤一次性道具、礼物、活动物品
+                        this._item_map[id] = {
+                            item_id: id,
+                            count: 1,
+                            category: items[id].category
+                        }
                 }
                 app.NetAgent.sendReq2Lobby("Lobby", "fetchBagInfo", {}, (i, n) => {
                     if (i || n.error)
                         uiscript.UIMgr.Inst.showNetReqError("fetchBagInfo", i, n);
                     else {
                         app.Log.log("背包信息：" + JSON.stringify(n));
-                        n.bag.items.forEach(item => uiscript.UI_Bag._item_map[item.item_id].count = item.stack)
+                        console.log(n);
+                        n.bag.items.forEach(item => uiscript.UI_Bag._item_map[item.item_id] = {
+                                item_id: item.item_id,
+                                count: item.stack,
+                                category: items[item.item_id].category
+                            })
                     }
                 })
             }
@@ -111,7 +140,7 @@ if (game) {
             uiscript.UI_TitleBook.Init = function () {
                 var e = this;
                 var n = cfg.item_definition.title.map_;
-                for (var a = cfg.item_definition.title.minKey_; a <= cfg.item_definition.title.maxKey_; a++) {
+                for (var a in cfg.item_definition.title.map_) {
                     e.owned_title.push(a)
                 }
             }
@@ -133,24 +162,27 @@ if (game) {
             //本地解锁宿舍(覆盖)
             uiscript.UI_Sushe.init = function (e) {
                 let i = this;
-				console.group("wqdy读取表");
+                console.group("wqdy读取表");
                 console.log(args);
                 console.groupEnd();
                 // 用于强制解锁语音和传记
-				args.spot = [];
-				const deleteLimit = (item) =>{
-					if (item.jieju != undefined){
-						args.spot.push(JSON.parse(JSON.stringify(item)));
-					}
-					item.level_limit = 0,
-					item.bond_limit = 0,
-					item.is_married = 0;
-				}
-				cfg.voice.sound.rows_.forEach(deleteLimit,"voice"),
-				cfg.spot.spot.rows_.forEach(deleteLimit,"spot");
-				if (args.finished_endings != undefined){
-					i.finished_endings_map = args.finished_endings;
-				}
+                args.spot = [];
+                const deleteLimit = (item) => {
+                    if (item.jieju != undefined) {
+                        args.spot.push(JSON.parse(JSON.stringify(item)));
+                    }
+                    item.level_limit = 0,
+                    item.bond_limit = 0,
+                    item.is_married = 0;
+                }
+                cfg.voice.sound.rows_.forEach(deleteLimit, "voice"),
+                cfg.spot.spot.rows_.forEach(deleteLimit, "spot");
+                if (args.finished_endings != undefined) {
+                    i.finished_endings_map = args.finished_endings;
+                }
+                if (args.star_chars != undefined) {
+                    i.star_chars = args.star_chars;
+                }
                 i.characters = cfg.item_definition.character.rows_.map(v => {
                     return {
                         charid: v.id,
@@ -162,6 +194,28 @@ if (game) {
                         extra_emoji: cfg.character.emoji.groups_[v.id] ? cfg.character.emoji.groups_[v.id].map(v => v.sub_id) : []
                     }
                 });
+				if (args.characters != undefined) {
+					for (var j = 0; j < i.characters.length; j ++)
+					for (var k = 0; k < args.characters.length; k ++)
+					if (i.characters[j].charid == args.characters[k].charid){
+						i.characters[j].skin = args.characters[k].skin;
+					}
+				}
+                if (args.isSexSort) {
+					console.log(args.isSexSort);
+                    for (var j = i.characters.length - 1; j >= 0; j--) {
+                        if (cfg.item_definition.character.map_[i.characters[j].charid].sex == 1) {
+                            for (var k = j - 1; k >= 0; k--) {
+                                if (cfg.item_definition.character.map_[i.characters[k].charid].sex == 2) {
+                                    let _character = i.characters[j];
+                                    i.characters[j] = i.characters[k];
+                                    i.characters[k] = _character;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
                 i.main_character_id = cfg.item_definition.character.map_[args.setcharacter] ? args.setcharacter : 200001;
                 i.main_chara_info.charaid = cfg.item_definition.character.map_[args.setcharacter] ? args.setcharacter : 200001;
                 if (cfg.item_definition.skin.map_[args.setskin]) {
@@ -174,17 +228,17 @@ if (game) {
                         uiscript.UIMgr.Inst.showNetReqError("fetchCharacterInfo", n, a);
                     else {
                         app.Log.log("fetchCharacterInfo: " + JSON.stringify(a));
-						args.originalCharacterInfo = a;
+                        args.originalCharacterInfo = a;
                         i.send_gift_count = a.send_gift_count;
                         i.send_gift_limit = a.send_gift_limit;
-						if (a.finished_endings){
-							for (r = 0; r < a.finished_endings.length; r++){
-								i.finished_endings_map[a.finished_endings[r]] = 1;
-							}
-						}
-						if (a.rewarded_endings)
-							for (var r = 0; r < a.rewarded_endings.length; r++)
-								i.rewarded_endings_map[a.rewarded_endings[r]] = 1;
+                        if (a.finished_endings) {
+                            for (r = 0; r < a.finished_endings.length; r++) {
+                                i.finished_endings_map[a.finished_endings[r]] = 1;
+                            }
+                        }
+                        if (a.rewarded_endings)
+                            for (var r = 0; r < a.rewarded_endings.length; r++)
+                                i.rewarded_endings_map[a.rewarded_endings[r]] = 1;
                         console.group("原有角色");
                         console.log(args.originalCharacterInfo);
                         console.groupEnd();
@@ -255,6 +309,13 @@ if (game) {
                 }
                 return onClickAtHead.call(this, e)
             }
+            //记忆皮肤（覆盖）
+            uiscript.UI_Sushe.prototype.onChangeSkin = function (t) {
+                uiscript.UI_Sushe.characters[this._select_index].skin = t,
+                this.change_select(this._select_index),
+                uiscript.UI_Sushe.characters[this._select_index].charid == uiscript.UI_Sushe.main_character_id && (GameMgr.Inst.account_data.avatar_id = t),
+				window.wqdy.writeSetting();
+            }
             //刷新当前皮肤(防止刷新皮肤)(新版本不需要锁定皮肤)
             const refreshInfo = uiscript.UI_Lobby.prototype.refreshInfo;
             uiscript.UI_Lobby.prototype.refreshInfo = function () {
@@ -276,14 +337,14 @@ if (game) {
                 })
                 return updateData.call(this, t)
             }
-			const _refreshPlayerInfo = uiscript.UI_WaitingRoom.prototype._refreshPlayerInfo;
-			uiscript.UI_WaitingRoom.prototype._refreshPlayerInfo =  function (t) {
-				if (t.account_id == GameMgr.Inst.account_id){
-					t.avatar_id = GameMgr.Inst.account_data.avatar_id;
-					t.title = GameMgr.Inst.account_data.title;
-				}
-				return _refreshPlayerInfo.call(this, t)
-			}
+            const _refreshPlayerInfo = uiscript.UI_WaitingRoom.prototype._refreshPlayerInfo;
+            uiscript.UI_WaitingRoom.prototype._refreshPlayerInfo = function (t) {
+                if (t.account_id == GameMgr.Inst.account_id) {
+                    t.avatar_id = GameMgr.Inst.account_data.avatar_id;
+                    t.title = GameMgr.Inst.account_data.title;
+                }
+                return _refreshPlayerInfo.call(this, t)
+            }
             //解决更换装扮问题（覆盖）
             const Container_Zhuangban = function () {};
             for (let i in uiscript.zhuangban.Container_Zhuangban.prototype) {
@@ -356,17 +417,17 @@ if (game) {
                 this.btn_use.clickHandler = new Laya.Handler(this, function () {
                     r.btn_use.mouseEnabled = !1;
                     var e = r.tab_index;
-                    uiscript.UI_Sushe.using_commonview_index = e, 
-					r.refresh_btn(), 
-					r.refresh_tab(), 
-					r.onChangeGameView()
+                    uiscript.UI_Sushe.using_commonview_index = e,
+                    r.refresh_btn(),
+                    r.refresh_tab(),
+                    r.onChangeGameView()
                 })
-				GameMgr.Inst.account_data.avatar_frame = game.GameUtility.get_view_id(game.EView.head_frame);
+                    GameMgr.Inst.account_data.avatar_frame = game.GameUtility.get_view_id(game.EView.head_frame);
             }
-            uiscript.zhuangban.Container_Zhuangban.prototype = Container_Zhuangban.prototype;	
-			//不管怎样,在本地显示发送的表情;如果表情通过网络验证时,表情会被显示两次(仅在网络连接极差时)			
+            uiscript.zhuangban.Container_Zhuangban.prototype = Container_Zhuangban.prototype;
+            //不管怎样,在本地显示发送的表情;如果表情通过网络验证时,表情会被显示两次(仅在网络连接极差时)
             const sendReq2MJ = app.NetAgent.sendReq2MJ;
-                app.NetAgent.sendReq2MJ = function (a, b, c, d) {
+            app.NetAgent.sendReq2MJ = function (a, b, c, d) {
                 if (a === "FastTest" && b === "broadcastInGame") {
                     let i = JSON.parse(c.content);
                     console.log("发送表情", i.emo);
@@ -375,62 +436,133 @@ if (game) {
                 }
                 return sendReq2MJ.call(this, a, b, c, d);
             }
-			//解决详细资料显示问题
-			const sendReq2Lobby = app.NetAgent.sendReq2Lobby;
-				app.NetAgent.sendReq2Lobby = function(a, b, c, d) {
-					if (a === "Lobby" && b === "fetchAccountInfo") {
-						var d_back = d;
-						d = function (i, n) {
-							if (i || n.error)
-								uiscript.UIMgr.Inst.showNetReqError("fetchAccountInfo", i, n);
-							else {
-								var a = n.account;
-								if (a.account_id == GameMgr.Inst.account_id){
-									a.avatar_id = GameMgr.Inst.account_data.avatar_id;
-									a.title = GameMgr.Inst.account_data.title;
-								}
-							}
-							return d_back.call(this,i,n);
-						}
-					}
-					return sendReq2Lobby.call(this, a, b, c, d);
+            //解决详细资料显示问题
+            const sendReq2Lobby = app.NetAgent.sendReq2Lobby;
+            app.NetAgent.sendReq2Lobby = function (a, b, c, d) {
+                if (a === "Lobby" && b === "fetchAccountInfo") {
+                    var d_back = d;
+                    d = function (i, n) {
+                        if (i || n.error)
+                            uiscript.UIMgr.Inst.showNetReqError("fetchAccountInfo", i, n);
+                        else {
+                            var a = n.account;
+                            if (a.account_id == GameMgr.Inst.account_id) {
+                                a.avatar_id = GameMgr.Inst.account_data.avatar_id;
+                                a.title = GameMgr.Inst.account_data.title;
+                            }
+                        }
+                        return d_back.call(this, i, n);
+                    }
+                }
+                return sendReq2Lobby.call(this, a, b, c, d);
+            }
+            //解决传记结局羁绊不够问题（覆盖）
+            uiscript.UI_Spot.prototype.end_spot = function () {
+                var e = {};
+                e.character_id = this.spot_character_id,
+                e.story_id = this.spot_id,
+                console.log(e.story_id),
+                e.ending_id = this.current_spot.rewardid;
+                var i = this.current_spot.rewardid;
+                //在本地验证等级
+                var ableToSend = false;
+                if (args.spot && args.originalCharacterInfo.characters) {
+                    args.spot.forEach(a => {
+                        if (a.unique_id == e.story_id) {
+                            args.originalCharacterInfo.characters.forEach(b => {
+                                if (b.charid == a.id) {
+                                    if (b.level >= a.level_limit && b.is_upgraded >= a.is_married) {
+                                        ableToSend = true;
+                                    }
+                                }
+                            })
+                        }
+                    })
+                }
+                if (ableToSend) {
+                    app.NetAgent.sendReq2Lobby("Lobby", "addFinishedEnding", e, function (e, n) {
+                        e || n.error ? uiscript.UIMgr.Inst.showNetReqError("addFinishedEnding", e, n) : uiscript.UI_Sushe.add_finish_ending(i)
+                    });
+                } else {
+                    uiscript.UI_Sushe.add_finish_ending(i);
+                }
+                var n = cfg.spot.rewards.get(this.current_spot.rewardid),
+                a = n ? n.type : 1;
+                uiscript.UI_Spot_End.Inst.show("spot_end" + a);
+                window.wqdy.writeSetting();
+            }
+            //删除角色标星的服务器请求
+            uiscript.UI_Sushe.change_char_star = function (t) {
+                var e = this.star_chars.indexOf(t);
+                -1 != e ? this.star_chars.splice(e, 1) : this.star_chars.push(t);
+                console.log(this.star_chars);
+            }
+            //解决友尽房界面更换人物、皮肤问题
+            uiscript.zhuangban.Page_Waiting_Head.prototype.close = function (e) {
+                var i = this;
+                if (this.me.visible)
+                    if (e)
+                        this.me.visible = !1;
+                    else {
+                        var n = this.chara_infos[this.choosed_chara_index];
+                        if (n.chara_id != uiscript.UI_Sushe.main_character_id) {
+                            uiscript.UI_Sushe.main_character_id = n.chara_id;
+                        }
+                        if (this.choosed_skin_id != GameMgr.Inst.account_data.avatar_id)
+                            for (var a = 0; a < uiscript.UI_Sushe.characters.length; a++)
+                                if (uiscript.UI_Sushe.characters[a].charid == n.chara_id) {
+                                    uiscript.UI_Sushe.characters[a].skin = this.choosed_skin_id;
+                                    break;
+                                }
+                        GameMgr.Inst.account_data.avatar_id = this.choosed_skin_id;
+                        if (uiscript.UI_WaitingRoom && uiscript.UI_WaitingRoom.Inst && uiscript.UI_WaitingRoom.Inst.refreshAsOwner) {
+                            uiscript.UI_WaitingRoom.Inst.refreshAsOwner()
+                        }
+                        uiscript.UIBase.anim_alpha_out(this.me, {
+                            x: 0
+                        }, 200, 0, Laya.Handler.create(this, function () {
+                                i.me.visible = !1
+                            }))
+                    }
+            }
+            //将表情设置为原人物表情
+            const initRoom = uiscript.UI_DesktopInfo.prototype.initRoom;
+            uiscript.UI_DesktopInfo.prototype.initRoom = function () {
+                if (args.isUseOriginEmoji && view.DesktopMgr.Inst.mode == view.EMJMode.play && args.originalCharacterInfo) {
+                    view.DesktopMgr.Inst.main_role_character_info.charid = args.originalCharacterInfo.main_character_id;
+                }
+                return initRoom.call(this);
+            }
+			const changeCharacter = function () {
+				if (args.isUseOriginEmoji) {
+                    for (var i = 0; i < view.DesktopMgr.Inst.player_datas.length; i++) {
+                        if (view.DesktopMgr.Inst.player_datas[i].account_id == GameMgr.Inst.account_id) {
+                            view.DesktopMgr.Inst.player_datas[i].character.charid = uiscript.UI_Sushe.main_character_id;
+                        }
+                    }
+                }
 			}
-			//解决传记结局羁绊不够问题（覆盖）
-			uiscript.UI_Spot.prototype.end_spot = function (){
-				var e = {};
-				e.character_id = this.spot_character_id,
-				e.story_id = this.spot_id,
-				console.log(e.story_id),
-				e.ending_id = this.current_spot.rewardid;
-				var i = this.current_spot.rewardid;
-				//在本地验证等级
-				var ableToSend = false;
-				if (args.spot && args.originalCharacterInfo.characters){
-					args.spot.forEach(a => {
-						if (a.unique_id == e.story_id){
-							args.originalCharacterInfo.characters.forEach(b => {
-								if (b.charid == a.id){
-									if (b.level >= a.level_limit && b.is_upgraded >= a.is_married){
-										ableToSend = true;
-									}
-								}
-							})
-						}
-					})
-				}
-				if (ableToSend){
-					app.NetAgent.sendReq2Lobby("Lobby", "addFinishedEnding", e, function (e, n) {
-						e || n.error ? uiscript.UIMgr.Inst.showNetReqError("addFinishedEnding", e, n) : uiscript.UI_Sushe.add_finish_ending(i)
-					});
-				}
-				else{
-					uiscript.UI_Sushe.add_finish_ending(i);
-				}
-				var n = cfg.spot.rewards.get(this.current_spot.rewardid),
-				a = n ? n.type : 1;
-				uiscript.UI_Spot_End.Inst.show("spot_end" + a);
-				window.wqdy.writeSetting();
-			}
+            const shout = uiscript.UI_DesktopInfo.prototype.shout; //在表情加载好后，将语音换回原人物
+            uiscript.UI_DesktopInfo.prototype.shout = function (a, b, c) {
+                changeCharacter();
+                return shout.call(this, a, b, c);
+            }
+			const playMindVoice = view.DesktopMgr.prototype.playMindVoice;
+			view.DesktopMgr.prototype.playMindVoice = function () {
+                changeCharacter();
+                return playMindVoice.call(this);
+            }
+            uiscript.UI_DesktopInfo.prototype.onShowEmo = function (t, e) { //确保发送的表情显示正常
+                var i = this._player_infos[t];
+                if (args.isUseOriginEmoji && i.avatar == GameMgr.Inst.account_data.avatar_id) {
+                    view.DesktopMgr.Inst.player_datas[view.DesktopMgr.Inst.localPosition2Seat(t)].character.charid = args.originalCharacterInfo.main_character_id;
+                }
+                0 != t && i.headbtn.emj_banned || i.emo.show(t, e)
+                console.log(i);
+                if (args.isUseOriginEmoji && i.avatar == GameMgr.Inst.account_data.avatar_id) {
+                    view.DesktopMgr.Inst.player_datas[view.DesktopMgr.Inst.localPosition2Seat(t)].character.charid = uiscript.UI_Sushe.main_character_id;
+                }
+            }
         }
     }
 
@@ -440,7 +572,17 @@ if (game) {
         Majsoul_Plus["wqdy"] = {
             name: "我全都要",
             actions: {
-                "手动保存配置": () => window.wqdy.writeSetting()
+                "手动保存配置": () => window.wqdy.writeSetting(),
+                "切换表情显示": () => {
+                    args.isUseOriginEmoji = !args.isUseOriginEmoji;
+                    localStorage.setItem("isUseOriginEmoji", args.isUseOriginEmoji);
+					return "应用成功，下一局游戏生效。"
+                },
+                "按性别排序角色": () => {
+                    args.isSexSort = !args.isSexSort;
+                    localStorage.setItem("isSexSort", isSexSort);
+					return "应用成功，重新启动游戏后生效。"
+                }
             }
         }
         console.log("我全都要 加载完毕");
