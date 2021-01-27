@@ -1,5 +1,3 @@
-let isUseOriginEmoji = undefined; //当此项为true时，对局内的表情将会是原角色的表情，而非wqdy更换过后的。默认关闭。
-let isSexSort = undefined; //当此项为true时，宿舍内的角色将会以性别排序而非纯数组排序。默认关闭。
 if (game) {
     const args = {};
     class WQDY {
@@ -58,8 +56,22 @@ if (game) {
                     console.log("Failed to load Characters,Error Message: " + e);
                 }
             };
-            args.isUseOriginEmoji = isUseOriginEmoji ? isUseOriginEmoji : JSON.parse(localStorage.getItem("isUseOriginEmoji"));
-            args.isSexSort = isSexSort ? isSexSort : JSON.parse(localStorage.getItem("isSexSort"));
+            args.isUseOriginEmoji = false;
+            if (localStorage.getItem("isUseOriginEmoji")){
+                try {
+                    args.isUseOriginEmoji = JSON.parse(localStorage.getItem("isUseOriginEmoji"));
+                } catch (e) {
+                    console.log("Failed to load isUseOriginEmoji,Error Message: " + e);
+                }
+            }
+            args.isSexSort = false;
+            if (localStorage.getItem("isSexSort")){
+                try {
+                    args.isSexSort = JSON.parse(localStorage.getItem("isSexSort"));
+                } catch (e) {
+                    console.log("Failed to load isSexSort,Error Message: " + e);
+                }
+            }
         }
         writeSetting() {
             let char_id = cfg.item_definition.skin.map_[GameMgr.Inst.account_data.avatar_id].character_id;
@@ -580,7 +592,7 @@ if (game) {
                 },
                 "按性别排序角色": () => {
                     args.isSexSort = !args.isSexSort;
-                    localStorage.setItem("isSexSort", isSexSort);
+                    localStorage.setItem("isSexSort", args.isSexSort);
 					return "应用成功，重新启动游戏后生效。"
                 }
             }
